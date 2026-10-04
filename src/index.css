@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme - cool paper, not white.
+     * Accents are darker than their dark-theme counterparts because the same
+     * hue on a light background loses contrast; these all clear WCAG AA (4.5:1)
+     * for body text. */
+    --cg-canvas: 244 246 249;
+    --cg-surface: 255 255 255;
+    --cg-elevated: 249 251 252;
+    --cg-line: 214 220 228;
+    --cg-ink: 17 24 34;
+    --cg-muted: 92 105 122;
+    --cg-ok: 4 120 84;
+    --cg-warn: 146 96 5;
+    --cg-danger: 199 32 32;
+    --cg-info: 5 116 148;
+
+    --cg-glass: 255 255 255;
+    --cg-glass-alpha: 0.74;
+  }
+
+  .dark {
+    /* Deep slate/charcoal - the brief's #0B0F17. */
+    --cg-canvas: 11 15 23;
+    --cg-surface: 18 24 34;
+    --cg-elevated: 24 31 43;
+    --cg-line: 45 55 70;
+    --cg-ink: 226 232 240;
+    --cg-muted: 138 152 172;
+    --cg-ok: 16 185 129;
+    --cg-warn: 245 158 11;
+    --cg-danger: 239 68 68;
+    --cg-info: 6 182 212;
+
+    --cg-glass: 30 38 51;
+    --cg-glass-alpha: 0.64;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--cg-info));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgb(var(--cg-info) / 0.28);
+  }
+}
+
+@layer components {
+  /* Frosted panel - only for elements that genuinely sit above content. */
+  .glass {
+    background-color: rgb(var(--cg-glass) / var(--cg-glass-alpha));
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+  }
+
+  .panel {
+    @apply rounded-card border border-line/70 bg-surface shadow-e1;
+  }
+
+  .mono-label {
+    @apply font-mono text-2xs uppercase tracking-[0.13em] text-muted;
+  }
+
+  .gauge-track {
+    @apply relative h-1.5 w-full overflow-hidden rounded-full bg-line/60;
+  }
+}
+
+@layer utilities {
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--cg-line)) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: rgb(var(--cg-line));
+    border-radius: 999px;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
