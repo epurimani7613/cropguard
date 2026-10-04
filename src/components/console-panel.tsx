@@ -66,27 +66,31 @@ export function ConsolePanel({
   return (
     <section className="panel overflow-hidden">
       {/* Console header doubles as the disclosure control. */}
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line/70 bg-elevated/50 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-line/60 bg-elevated/50 px-5 py-3">
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className="flex min-w-0 items-center gap-2 text-left"
+          className="pressable flex min-w-0 items-center gap-2.5 text-left"
         >
-          <Terminal className="h-3.5 w-3.5 shrink-0 text-muted" strokeWidth={1.75} />
-          <span className="text-[13px] font-semibold tracking-tight text-ink">UART / Serial Console</span>
-          <span className="rounded border border-line/70 bg-surface px-1 font-mono text-2xs text-muted">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+            <Terminal className="h-3.5 w-3.5" strokeWidth={2} />
+          </span>
+          <span className="font-display text-[15px] font-bold tracking-tight text-ink">
+            UART / Serial Console
+          </span>
+          <span className="pressable rounded-full border border-line/70 bg-surface px-2 py-0.5 font-mono text-2xs text-muted">
             {logs.length} lines
           </span>
           <ChevronDown
             className={cn(
-              'h-3.5 w-3.5 shrink-0 text-muted transition-transform duration-150',
+              'pressable h-4 w-4 shrink-0 text-muted',
               expanded && 'rotate-180',
             )}
           />
         </button>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           {state === 'connected' ? (
             <Button variant="outline" size="sm" onClick={onDisconnect}>
               <Usb className="h-3 w-3" strokeWidth={2} />
@@ -123,9 +127,9 @@ export function ConsolePanel({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line/70 bg-elevated/30 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line/60 bg-elevated/50 px-5 py-3">
           <span className="mono-label">Send test command over UART</span>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             {commands.map((c) => (
               <Button
                 key={c.command}

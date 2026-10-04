@@ -32,19 +32,19 @@ export function AccordionItem({
   return (
     <AccordionPrimitive.Item
       value={value}
-      className="overflow-hidden rounded-lg border border-line/70 bg-elevated/50"
+      className="pressable overflow-hidden rounded-xl border border-line/70 bg-elevated/50 hover:border-brand/25 hover:bg-elevated"
     >
       <AccordionPrimitive.Header>
-        <AccordionPrimitive.Trigger className="group flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-elevated">
-          <span className="flex min-w-0 items-center gap-2">
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted transition-transform duration-150 group-data-[state=open]:rotate-90" />
-            <span className="truncate text-[13px] font-medium text-ink">{title}</span>
+        <AccordionPrimitive.Trigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <ChevronRight className="h-4 w-4 shrink-0 text-brand transition-transform duration-300 group-data-[state=open]:rotate-90" />
+            <span className="truncate text-[13px] font-semibold text-ink">{title}</span>
           </span>
           {badge ? <span className="shrink-0">{badge}</span> : null}
         </AccordionPrimitive.Trigger>
       </AccordionPrimitive.Header>
       <AccordionPrimitive.Content className="overflow-hidden text-[13px] leading-relaxed text-muted">
-        <div className="border-t border-line/60 px-3 pb-3 pt-2.5">{children}</div>
+        <div className="px-4 pb-4 pt-0.5">{children}</div>
       </AccordionPrimitive.Content>
     </AccordionPrimitive.Item>
   );

@@ -4,81 +4,134 @@
 
 @layer base {
   :root {
-    /* Light theme - cool paper, not white.
-     * Accents are darker than their dark-theme counterparts because the same
-     * hue on a light background loses contrast; these all clear WCAG AA (4.5:1)
-     * for body text. */
-    --cg-canvas: 244 246 249;
+    /* Light theme — clean, warm, agricultural.
+     * Accents are darkened from their dark-theme counterparts because the same
+     * hue on a light background loses contrast; all clear WCAG AA (4.5:1).
+     * The brief's #1B4D3E deep emerald anchors the primary colour. */
+    --cg-canvas: 248 249 250; /* #F8F9FA */
     --cg-surface: 255 255 255;
-    --cg-elevated: 249 251 252;
-    --cg-line: 214 220 228;
-    --cg-ink: 17 24 34;
-    --cg-muted: 92 105 122;
-    --cg-ok: 4 120 84;
-    --cg-warn: 146 96 5;
-    --cg-danger: 199 32 32;
-    --cg-info: 5 116 148;
+    --cg-elevated: 247 251 248; /* mint-tinted, #E8F5E9 family */
+    --cg-line: 223 228 224;
+    --cg-ink: 17 32 26;
+    --cg-muted: 90 108 99;
+
+    --cg-brand: 27 77 62; /* #1B4D3E */
+    --cg-brand-soft: 232 245 233; /* #E8F5E9 */
+    --cg-leaf: 76 175 80; /* #4CAF50 */
+
+    --cg-ok: 22 128 74;
+    --cg-warn: 158 106 6;
+    --cg-danger: 190 34 34;
+    --cg-info: 12 118 150;
 
     --cg-glass: 255 255 255;
-    --cg-glass-alpha: 0.74;
+    --cg-glass-alpha: 0.82;
+
+    /* Soft diffused shadows — no harsh black borders. */
+    --cg-shadow-sm: 0 1px 2px rgb(27 77 62 / 0.04), 0 1px 3px rgb(27 77 62 / 0.06);
+    --cg-shadow-md: 0 2px 4px rgb(27 77 62 / 0.04), 0 8px 20px -6px rgb(27 77 62 / 0.1);
+    --cg-shadow-lg: 0 4px 8px rgb(27 77 62 / 0.04), 0 24px 48px -12px rgb(27 77 62 / 0.14);
+    --cg-radius: 16px;
   }
 
   .dark {
-    /* Deep slate/charcoal - the brief's #0B0F17. */
-    --cg-canvas: 11 15 23;
-    --cg-surface: 18 24 34;
-    --cg-elevated: 24 31 43;
-    --cg-line: 45 55 70;
-    --cg-ink: 226 232 240;
-    --cg-muted: 138 152 172;
-    --cg-ok: 16 185 129;
-    --cg-warn: 245 158 11;
-    --cg-danger: 239 68 68;
-    --cg-info: 6 182 212;
+    /* Night field — deep emerald-black rather than blue-slate, so the dark
+     * theme still reads agricultural rather than muddy. */
+    --cg-canvas: 9 20 17;
+    --cg-surface: 15 30 26;
+    --cg-elevated: 21 40 34;
+    --cg-line: 42 66 58;
+    --cg-ink: 234 244 238;
+    --cg-muted: 152 178 166;
 
-    --cg-glass: 30 38 51;
-    --cg-glass-alpha: 0.64;
+    --cg-brand: 122 214 168;
+    --cg-brand-soft: 24 52 43;
+    --cg-leaf: 140 226 130;
+
+    --cg-ok: 74 214 130;
+    --cg-warn: 245 176 66;
+    --cg-danger: 248 130 130;
+    --cg-info: 110 205 232;
+
+    --cg-glass: 20 38 33;
+    --cg-glass-alpha: 0.72;
+
+    --cg-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.24);
+    --cg-shadow-md: 0 2px 4px rgb(0 0 0 / 0.28), 0 8px 20px -6px rgb(0 0 0 / 0.44);
+    --cg-shadow-lg: 0 4px 8px rgb(0 0 0 / 0.3), 0 24px 48px -12px rgb(0 0 0 / 0.56);
+    --cg-radius: 16px;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
     scrollbar-gutter: stable;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-canvas font-sans text-ink antialiased;
     font-variant-numeric: tabular-nums;
+    /* Agricultural undertone without muddying the neutrals. */
+    background-image: radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      rgb(var(--cg-brand) / 0.05),
+      transparent 70%
+    );
   }
 
   :focus-visible {
-    outline: 2px solid rgb(var(--cg-info));
+    outline: 2px solid rgb(var(--cg-brand));
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
   ::selection {
-    background: rgb(var(--cg-info) / 0.28);
+    background: rgb(var(--cg-brand) / 0.18);
+  }
+
+  button,
+  input,
+  select,
+  a {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
 @layer components {
-  /* Frosted panel - only for elements that genuinely sit above content. */
+  /* Frosted panel — used only where an element genuinely sits above content. */
   .glass {
     background-color: rgb(var(--cg-glass) / var(--cg-glass-alpha));
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
   }
 
   .panel {
-    @apply rounded-card border border-line/70 bg-surface shadow-e1;
+    @apply rounded-2xl border border-line/80 bg-surface;
+    box-shadow: var(--cg-shadow-sm);
+    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* Lift on hover only where the card is itself interactive. */
+  .panel-interactive {
+    @apply cursor-pointer;
+  }
+  .panel-interactive:hover {
+    box-shadow: var(--cg-shadow-md);
+    transform: translateY(-2px);
+    border-color: rgb(var(--cg-brand) / 0.28);
   }
 
   .mono-label {
-    @apply font-mono text-2xs uppercase tracking-[0.13em] text-muted;
+    @apply font-mono text-2xs uppercase tracking-[0.12em] text-muted;
   }
 
   .gauge-track {
-    @apply relative h-1.5 w-full overflow-hidden rounded-full bg-line/60;
+    @apply relative h-1.5 w-full overflow-hidden rounded-full bg-line/70;
+  }
+
+  /* Unified motion posture: 0.3s ease, as the brief specifies. */
+  .pressable {
+    transition: all 0.3s ease;
   }
 }
 
@@ -98,6 +151,18 @@
   .scroll-thin::-webkit-scrollbar-track {
     background: transparent;
   }
+
+  /* Soft hairline that reads as a bevel, not a divider. */
+  .hairline {
+    @apply h-px w-full;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgb(var(--cg-line) / 0.9) 12%,
+      rgb(var(--cg-line) / 0.9) 88%,
+      transparent
+    );
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -107,5 +172,6 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

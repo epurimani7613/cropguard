@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, HelpCircle, Leaf, Sprout, TriangleAlert } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, HelpCircle, Sprout, TriangleAlert } from 'lucide-react';
 import { ConfidenceRing } from '@/components/confidence-ring';
 import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
@@ -10,23 +10,49 @@ import { cn } from '@/lib/utils';
 import type { Inference } from '@/types/telemetry';
 
 const SEVERITY_STYLE = {
-  healthy: { chip: 'border-ok/40 bg-ok/10 text-ok', meter: 'ok' as const, icon: CheckCircle2 },
-  watch: { chip: 'border-warn/40 bg-warn/10 text-warn', meter: 'warn' as const, icon: AlertTriangle },
-  critical: { chip: 'border-danger/40 bg-danger/10 text-danger', meter: 'danger' as const, icon: TriangleAlert },
+  healthy: { chip: 'border-ok/30 bg-ok/10 text-ok', meter: 'ok' as const, icon: CheckCircle2 },
+  watch: { chip: 'border-warn/30 bg-warn/10 text-warn', meter: 'warn' as const, icon: AlertTriangle },
+  critical: { chip: 'border-danger/30 bg-danger/10 text-danger', meter: 'danger' as const, icon: TriangleAlert },
 };
 
+const DOT: Record<string, string> = {
+  ok: 'bg-ok',
+  warn: 'bg-warn',
+  danger: 'bg-danger',
+  muted: 'bg-muted',
+};
+
+/**
+ * Treatment steps rendered as bold-lead bullets: the imperative is the scannable
+ * part, the rationale trails it. This is why entries are written "STOP — do X"
+ * in the data layer rather than as flat sentences.
+ */
 function List({ items, tone }: { items: string[]; tone: 'ok' | 'warn' | 'danger' | 'muted' }) {
   if (!items.length) return <p className="text-2xs text-muted">No entries for this class.</p>;
-  const dot =
-    tone === 'ok' ? 'bg-ok' : tone === 'warn' ? 'bg-warn' : tone === 'danger' ? 'bg-danger' : 'bg-muted';
   return (
-    <ol className="space-y-1.5">
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-2">
-          <span className={cn('mt-[7px] h-1 w-1 shrink-0 rounded-full', dot)} aria-hidden />
-          <span>{item}</span>
-        </li>
-      ))}
+    <ol className="space-y-2">
+      {items.map((item, i) => {
+        // Split on the first em dash: bold lead, muted tail.
+        const m = /^([^—]+?)\s*—\s*(.+)$/.exec(item);
+        return (
+          <li key={i} className="flex gap-2.5">
+            <span
+              className={cn('mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full', DOT[tone])}
+              aria-hidden
+            />
+            <span className="leading-relaxed">
+              {m ? (
+                <>
+                  <strong className="font-semibold text-ink">{m[1]}</strong>
+                  <span className="text-muted"> — {m[2]}</span>
+                </>
+              ) : (
+                <span className="text-muted">{item}</span>
+              )}
+            </span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -80,36 +106,37 @@ export function DiagnosisCard({ current }: { current: Inference | null }) {
         }
       />
 
-      <CardBody className="flex flex-1 flex-col gap-3.5">
+      <CardBody className="flex flex-1 flex-col gap-4">
         {/* Verdict — the single most important thing on this surface. */}
-        <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <Leaf className="h-4 w-4 shrink-0 text-muted" strokeWidth={1.75} />
-              <h3 className="text-2xl font-semibold uppercase leading-tight tracking-tight text-ink">
-                {passes ? info.title : 'Inconclusive'}
-              </h3>
-            </div>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
+            <span className="mono-label">Primary diagnosis</span>
+            <h3 className="mt-1.5 font-display text-[26px] font-extrabold uppercase leading-[1.1] tracking-tight text-ink">
+              {passes ? info.title : 'Inconclusive'}
+            </h3>
+            <p className="mt-2.5 text-sm leading-relaxed text-muted">
               {passes
                 ? info.summary
                 : `Top class "${label}" scored ${(current.topScore * 100).toFixed(1)}%, under the ${DEVICE_INFO.threshold.toFixed(2)} decision threshold. No treatment guidance is emitted for a sub-threshold frame.`}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            {/* Badge tags — the brief's "high-quality badge tags". */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <span
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-2xs font-semibold',
+                  'pressable inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-2xs font-bold',
                   style.chip,
                 )}
               >
-                <SeverityIcon className="h-3 w-3" strokeWidth={2.25} />
+                <SeverityIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
                 {passes ? SEVERITY_LABEL[info.severity] : 'Below threshold'}
               </span>
-              <span className="rounded-full border border-line/70 bg-elevated px-2 py-0.5 font-mono text-2xs text-muted">
+              <span className="pressable inline-flex items-center rounded-full border border-line/70 bg-elevated px-3 py-1 text-2xs font-semibold text-ink">
                 {info.crop}
               </span>
-              <span className="font-mono text-2xs text-muted">{info.pathogen}</span>
+              <span className="pressable inline-flex items-center rounded-full border border-brand/25 bg-brand/8 px-3 py-1 text-2xs font-semibold text-brand">
+                {info.pathogen}
+              </span>
             </div>
 
             <p className="mt-3 font-mono text-2xs text-muted">

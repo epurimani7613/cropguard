@@ -22,12 +22,18 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-3 px-4 pb-3 pt-3.5', className)}>
-      <div className="flex min-w-0 items-start gap-2.5">
-        {icon ? <span className="mt-0.5 shrink-0 text-muted">{icon}</span> : null}
+    <div className={cn('flex items-start justify-between gap-3 px-5 pb-3 pt-4', className)}>
+      <div className="flex min-w-0 items-start gap-3">
+        {icon ? (
+          <span className="mt-px flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+            {icon}
+          </span>
+        ) : null}
         <div className="min-w-0">
-          <h2 className="truncate text-[13px] font-semibold tracking-tight text-ink">{title}</h2>
-          {subtitle ? <p className="mt-0.5 text-2xs leading-snug text-muted">{subtitle}</p> : null}
+          <h2 className="truncate font-display text-[15px] font-bold tracking-tight text-ink">
+            {title}
+          </h2>
+          {subtitle ? <p className="mt-1 text-2xs leading-snug text-muted">{subtitle}</p> : null}
         </div>
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-1.5">{actions}</div> : null}
@@ -36,5 +42,10 @@ export function CardHeader({
 }
 
 export function CardBody({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn('px-4 pb-4', className)}>{children}</div>;
+  return <div className={cn('px-5 pb-5', className)}>{children}</div>;
+}
+
+/** Hairline separator with generous breathing room. */
+export function CardDivider({ className }: { className?: string }) {
+  return <div className={cn('hairline my-4', className)} />;
 }
