@@ -9,11 +9,13 @@ import { formatMs } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { Inference, InputMode, PresetId, SimMode } from '@/types/telemetry';
 
-/** The three quick-start simulation buttons from the brief. */
+/** The simulation buttons — one per disease category plus random drift. */
 const SIM_BUTTONS: { mode: SimMode; label: string; hint: string }[] = [
   { mode: 'healthy', label: 'Simulate Healthy Leaf', hint: 'Stream confident Healthy frames' },
-  { mode: 'late-blight', label: 'Simulate Late Blight', hint: 'Stream critical Late_Blight frames' },
-  { mode: 'random', label: 'Simulate Random', hint: 'Drift across all classes' },
+  { mode: 'late-blight', label: 'Simulate Late Blight', hint: 'Stream critical Late_Blight (fungal)' },
+  { mode: 'target-spot', label: 'Simulate Target Spot', hint: 'Stream Tomato Target Spot (fungal)' },
+  { mode: 'bacterial-spot', label: 'Simulate Bacterial Spot', hint: 'Stream Bacterial Spot (bacterial)' },
+  { mode: 'random', label: 'Simulate Random', hint: 'Drift across all 10 disease classes' },
 ];
 
 export function SimulationPanel({

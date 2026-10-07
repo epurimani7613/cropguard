@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, Cpu, Info } from 'lucide-react';
 import { ConsolePanel } from '@/components/console-panel';
 import { DiagnosisCard } from '@/components/diagnosis-card';
+import { DiseaseDetectionCard } from '@/components/disease-detection-card';
+import { DiseaseDetectionHistory } from '@/components/disease-detection-history';
+import { DiseaseDetectionTrend } from '@/components/disease-detection-trend';
+import { EdgeDeviceStatus } from '@/components/edge-device-status';
 import { DeviceStrip, Header } from '@/components/header';
 import { ScoreBreakdown, ThroughputTrend } from '@/components/score-breakdown';
 import { SimulationPanel } from '@/components/simulation-panel';
@@ -12,10 +16,12 @@ import { CLASS_ORDER } from '@/data/classes';
 import { DEVICE_INFO } from '@/data/device';
 import { formatBytes } from '@/lib/format';
 import { useCropGuard, UART_COMMANDS } from '@/state/useCropGuard';
+import { useDiseaseDetection } from '@/state/useDiseaseDetection';
 import { readStoredTheme, storeTheme, type ThemeMode } from '@/lib/theme';
 
 export default function App() {
   const cg = useCropGuard();
+  const dd = useDiseaseDetection(cg.state);
   const [theme, setTheme] = useState<ThemeMode>(
     () => readStoredTheme() ?? (document.documentElement.classList.contains('dark') ? 'dark' : 'light'),
   );
@@ -29,6 +35,11 @@ export default function App() {
     () => setTheme((t) => (t === 'dark' ? 'light' : 'dark')),
     [],
   );
+
+  // Enable demo mode when not connected to hardware
+  useEffect(() => {
+    dd.setDemoMode(cg.state !== 'connected');
+  }, [cg.state, dd.setDemoMode]);
 
   const { derived, telemetry, state, actions } = cg;
   const serialBlocked = state === 'connected' || state === 'connecting';
@@ -109,6 +120,36 @@ export default function App() {
               />
               <DeviceSpec />
             </div>
+          </div>
+
+          {/* ── Edge AI Disease Detection ── */}
+          <div className="xl:col-span-7">
+            <DiseaseDetectionCard
+              latest={dd.latest}
+              status={dd.status}
+              isDemoMode={dd.isDemoMode}
+            />
+          </div>
+
+          <div className="xl:col-span-5">
+            <div className="grid grid-cols-1 gap-4">
+              <EdgeDeviceStatus
+                connectionState={state}
+                detectionStatus={dd.status}
+                latest={dd.latest}
+              />
+              <DiseaseDetectionTrend
+                history={dd.history}
+                isDemoMode={dd.isDemoMode}
+              />
+            </div>
+          </div>
+
+          <div className="xl:col-span-12">
+            <DiseaseDetectionHistory
+              history={dd.history}
+              isDemoMode={dd.isDemoMode}
+            />
           </div>
 
           <div className="xl:col-span-12">

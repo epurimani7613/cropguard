@@ -66,12 +66,18 @@ export default {
           '0%,100%': { transform: 'rotate(-3deg)' },
           '50%': { transform: 'rotate(3deg)' },
         },
+        // Pulsing glow on the active prediction bar.
+        'pulse-glow': {
+          '0%,100%': { opacity: '1' },
+          '50%': { opacity: '0.75' },
+        },
       },
       animation: {
         'pulse-ring': 'pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         sheen: 'sheen 1.1s ease-in-out infinite',
         rise: 'rise 300ms cubic-bezier(0.16, 1, 0.3, 1) both',
         sway: 'sway 5s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
       },
     },
   },

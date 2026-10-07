@@ -15,14 +15,32 @@ import { Meter } from '@/components/ui/meter';
 import { VerticalBars } from '@/components/vertical-bars';
 import { formatMs } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { AccentVar, Inference } from '@/types/telemetry';
-import { getCropClass } from '@/data/classes';
+import type { AccentVar, DiseaseCategory, Inference } from '@/types/telemetry';
+import { getCropClass, inferCategory, normaliseLabel } from '@/data/classes';
 
 const METER_TONE: Record<AccentVar, 'ok' | 'warn' | 'danger' | 'info'> = {
   ok: 'ok',
   warn: 'warn',
   danger: 'danger',
   info: 'info',
+};
+
+/**
+ * Glow colours keyed by disease category — applied as a box-shadow on the
+ * active prediction row to make it visually pop.
+ */
+const CATEGORY_GLOW: Record<DiseaseCategory, string> = {
+  healthy: '0 0 12px rgba(16,185,129,0.35)',
+  fungal: '0 0 12px rgba(239,68,68,0.35)',
+  bacterial: '0 0 12px rgba(139,92,246,0.35)',
+  viral: '0 0 12px rgba(245,158,11,0.35)',
+};
+
+const CATEGORY_BORDER: Record<DiseaseCategory, string> = {
+  healthy: 'rgba(16,185,129,0.4)',
+  fungal: 'rgba(239,68,68,0.4)',
+  bacterial: 'rgba(139,92,246,0.4)',
+  viral: 'rgba(245,158,11,0.4)',
 };
 
 function ChartTooltip({
@@ -50,12 +68,14 @@ function ChartTooltip({
 export function ScoreBreakdown({ current }: { current: Inference | null }) {
   const [metric, setMetric] = useState<'bars' | 'trend'>('bars');
   const topScore = current?.topScore ?? 0;
+  const topLabel = current?.scores[current.topIndex]?.label ?? '';
+  const topCategory = topLabel ? inferCategory(topLabel) : 'healthy';
 
   return (
     <Card className="h-full">
       <CardHeader
-        title="Class Confidence Scores"
-        subtitle="Softmax output from the classifier head"
+        title="Multi-Class Confidence Breakdown"
+        subtitle="Softmax output — all trained classes from the retrained model"
         actions={
           <div className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-line/70 bg-elevated p-0.5">
             {(['bars', 'trend'] as const).map((m) => (
@@ -79,11 +99,27 @@ export function ScoreBreakdown({ current }: { current: Inference | null }) {
           current.scores.map((s) => {
             const info = getCropClass(s.label);
             const isTop = current.scores[current.topIndex]?.label === s.label;
+            const displayName = normaliseLabel(s.label);
             return (
-              <div key={s.label}>
+              <div
+                key={s.label}
+                className={cn(
+                  'rounded-lg px-2 py-1.5 transition-all duration-300',
+                  isTop && 'animate-pulse-glow',
+                )}
+                style={
+                  isTop
+                    ? {
+                        boxShadow: CATEGORY_GLOW[topCategory],
+                        border: `1px solid ${CATEGORY_BORDER[topCategory]}`,
+                        background: `linear-gradient(135deg, ${CATEGORY_BORDER[topCategory].replace('0.4', '0.06')}, transparent)`,
+                      }
+                    : undefined
+                }
+              >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="truncate font-mono text-xs text-ink">{s.label}</span>
+                    <span className="truncate font-mono text-xs text-ink">{displayName}</span>
                     {isTop ? (
                       <span className="shrink-0 rounded border border-ok/40 bg-ok/10 px-1 text-2xs font-medium text-ok">
                         TOP
@@ -104,7 +140,7 @@ export function ScoreBreakdown({ current }: { current: Inference | null }) {
                   value={s.score}
                   tone={METER_TONE[info.accent]}
                   animated={isTop}
-                  label={`${s.label} confidence`}
+                  label={`${displayName} confidence`}
                 />
               </div>
             );
@@ -115,26 +151,49 @@ export function ScoreBreakdown({ current }: { current: Inference | null }) {
 
         <div className="hairline my-3" />
 
+        {/* Hardware timing metrics from the STM32 */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <p className="mono-label">DSP exec</p>
+            <p className="mono-label">DSP Latency</p>
             <p className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-info">
               {formatMs(current?.timing.dspMs ?? 0, 2)}
             </p>
           </div>
           <div>
-            <p className="mono-label">NN inference</p>
+            <p className="mono-label">NN Exec Time</p>
             <p className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-info">
               {formatMs(current?.timing.nnMs ?? 0, 2)}
             </p>
           </div>
           <div>
-            <p className="mono-label">Total latency</p>
+            <p className="mono-label">Total Latency</p>
             <p className="mt-0.5 font-mono text-sm font-semibold tabular-nums text-ink">
               {formatMs((current?.timing.dspMs ?? 0) + (current?.timing.nnMs ?? 0), 2)}
             </p>
           </div>
         </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <p className="mono-label">Frame Budget</p>
+            <p className="mt-0.5 font-mono text-xs tabular-nums text-muted">
+              {current ? `${current.timing.frameMs.toFixed(0)} ms` : '—'}
+            </p>
+          </div>
+          <div>
+            <p className="mono-label">Buffer</p>
+            <p className="mt-0.5 font-mono text-xs tabular-nums text-muted">
+              96×96 RGB · 4096
+            </p>
+          </div>
+          <div>
+            <p className="mono-label">Classes</p>
+            <p className="mt-0.5 font-mono text-xs tabular-nums text-muted">
+              {current?.scores.length ?? 0}
+            </p>
+          </div>
+        </div>
+
         <p className="font-mono text-2xs text-muted">
           threshold 0.600 · top score {(topScore * 100).toFixed(2)}%{' '}
           {topScore >= 0.6 ? '→ PASS' : '→ below threshold, no action emitted'}

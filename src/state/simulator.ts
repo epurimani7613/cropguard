@@ -42,12 +42,12 @@ export function isHiddenTruth(v: string): v is HiddenTruth {
  * be able to reproduce that state for the UI's inconclusive path to be
  * exercised at all.
  */
-const CLARITY = 1.5;
+const CLARITY = 2.2;
 /** Chance per frame that the truth flips — a new observation event. */
 const DRIFT_RATE = 0.012;
 
 export function randomScores(truth: HiddenTruth): ClassScore[] {
-  const logits = CLASS_ORDER.map((label) => (label === truth ? CLARITY : randn() * 0.9));
+  const logits = CLASS_ORDER.map((label) => (label === truth ? CLARITY : randn() * 0.6));
   const probs = softmax(logits);
   return CLASS_ORDER.map((label, i) => ({ label, score: probs[i] }));
 }
@@ -69,8 +69,20 @@ export function makeInference(
   source: Inference['source'],
   transport: Inference['transport'] = 'simulated',
 ): Inference {
-  // Normalise into declared label order so the UI never depends on score order.
-  const ordered = CLASS_ORDER.map((label) => scores.find((s) => s.label === label) ?? { label, score: 0 });
+  // Build the ordered list from whatever the input scores contain.
+  // Any label from CLASS_ORDER that's missing gets zero. Any label from
+  // `scores` that isn't in CLASS_ORDER is still included (dynamic labels).
+  const byLabel = new Map(scores.map((s) => [s.label, s.score]));
+  const ordered: ClassScore[] = CLASS_ORDER.map((label) => ({
+    label,
+    score: byLabel.get(label) ?? 0,
+  }));
+  // Add any extra labels not in CLASS_ORDER (from a retrained model).
+  for (const s of scores) {
+    if (!ordered.some((o) => o.label === s.label)) {
+      ordered.push(s);
+    }
+  }
   const top = topOf(ordered);
   return {
     id: uid('inf'),
@@ -89,16 +101,31 @@ function drift(current: number, target: number, theta: number, sigma: number, lo
   return clamp(current + theta * (target - current) + sigma * randn(), lo, hi);
 }
 
+/**
+ * Environmental target values keyed by disease. Diseases not listed here
+ * get the 'Healthy' defaults, which is conservative.
+ */
+const ENV_TARGETS: Record<string, { humidity: number; temp: number; wet: number }> = {
+  Healthy:                { humidity: 62, temp: 26, wet: 24 },
+  Early_Blight:           { humidity: 79, temp: 27, wet: 55 },
+  Late_Blight:            { humidity: 90, temp: 19, wet: 86 },
+  Tomato_Target_Spot:     { humidity: 82, temp: 28, wet: 64 },
+  Tomato_Bacterial_Spot:  { humidity: 85, temp: 29, wet: 72 },
+  Yellow_Leaf_Curl:       { humidity: 65, temp: 31, wet: 16 },
+  Tomato_Mosaic_Virus:    { humidity: 70, temp: 26, wet: 30 },
+  Septoria_Leaf_Spot:     { humidity: 84, temp: 24, wet: 68 },
+  Leaf_Mold:              { humidity: 88, temp: 25, wet: 48 },
+  Spider_Mites:           { humidity: 45, temp: 33, wet: 12 },
+};
+
 export function stepTelemetry(prev: Telemetry, truth: HiddenTruth): Telemetry {
-  const humidityTarget = { Early_Blight: 79, Healthy: 62, Late_Blight: 90 }[truth];
-  const tempTarget = { Early_Blight: 27, Healthy: 26, Late_Blight: 19 }[truth];
-  const wetTarget = { Early_Blight: 55, Healthy: 24, Late_Blight: 86 }[truth];
+  const env = ENV_TARGETS[truth] ?? ENV_TARGETS.Healthy;
 
   return {
     ...prev,
-    humidityPct: Math.round(drift(prev.humidityPct, humidityTarget, 0.22, 1.4, 22, 98) * 10) / 10,
-    temperatureC: Math.round(drift(prev.temperatureC, tempTarget, 0.2, 0.16, 12, 38) * 100) / 100,
-    leafWetnessPct: Math.round(drift(prev.leafWetnessPct, wetTarget, 0.26, 2.1, 0, 100) * 10) / 10,
+    humidityPct: Math.round(drift(prev.humidityPct, env.humidity, 0.22, 1.4, 22, 98) * 10) / 10,
+    temperatureC: Math.round(drift(prev.temperatureC, env.temp, 0.2, 0.16, 12, 38) * 100) / 100,
+    leafWetnessPct: Math.round(drift(prev.leafWetnessPct, env.wet, 0.26, 2.1, 0, 100) * 10) / 10,
     cpuLoadPct: Math.round(drift(prev.cpuLoadPct, 34, 0.3, 2.6, 6, 88) * 10) / 10,
     heapUsedBytes: Math.round(
       drift(prev.heapUsedBytes, 21_840, 0.12, 640, 8_000, BASE_TELEMETRY.heapCapacityBytes),
@@ -126,8 +153,8 @@ export function pickNextTruth(current: HiddenTruth): HiddenTruth {
  * Emits the exact JSON frame the firmware would send, so the simulator
  * exercises the same code path as a real board (Mode 1 parsing).
  *
- *   {"class":"Healthy","confidence":0.948,"dsp_time":3,"nn_time":11,
- *    "scores":{"Early_Blight":0.052,"Healthy":0.948,"Late_Blight":0.000}}
+ *   {"class":"Tomato_Target_Spot","confidence":0.923,"dsp_time":7,"nn_time":620,
+ *    "scores":{"Healthy":0.012,...}}
  */
 export function buildJsonFrame(inf: Inference): string {
   const scores = Object.fromEntries(inf.scores.map((s) => [s.label, Number(s.score.toFixed(4))]));

@@ -1,6 +1,16 @@
 export type Severity = 'healthy' | 'watch' | 'critical';
 export type AccentVar = 'ok' | 'warn' | 'danger' | 'info';
 
+/**
+ * Disease category — drives the dynamic color coding in the verdict card.
+ *
+ *   healthy   → Emerald Green (#10B981 / --cg-ok)
+ *   fungal    → Crimson Red   (#EF4444 / --cg-danger)
+ *   bacterial → Violet        (custom inline)
+ *   viral     → Amber         (#F59E0B / --cg-warn)
+ */
+export type DiseaseCategory = 'healthy' | 'fungal' | 'bacterial' | 'viral';
+
 export interface CropClass {
   /** Edge Impulse output label, verbatim from model_variables.h. */
   label: string;
@@ -10,6 +20,8 @@ export interface CropClass {
   pathogen: string;
   severity: Severity;
   accent: AccentVar;
+  /** Category for dynamic badge colour mapping. */
+  category: DiseaseCategory;
   summary: string;
   overview: string;
   actionPlan: string[];
@@ -84,7 +96,14 @@ export interface LogLine {
   message: string;
 }
 
-export type PresetId = 'healthy' | 'early-blight' | 'late-blight';
+export type PresetId =
+  | 'healthy'
+  | 'early-blight'
+  | 'late-blight'
+  | 'target-spot'
+  | 'bacterial-spot'
+  | 'yellow-leaf-curl'
+  | 'mosaic-virus';
 
 export interface TestPreset {
   id: PresetId;
@@ -98,7 +117,13 @@ export interface TestPreset {
 export type InputMode = 'camera' | 'static-vector';
 
 /** Simulation source buttons from the control panel. */
-export type SimMode = 'off' | 'healthy' | 'late-blight' | 'random';
+export type SimMode =
+  | 'off'
+  | 'healthy'
+  | 'late-blight'
+  | 'target-spot'
+  | 'bacterial-spot'
+  | 'random';
 
 /** A command queued for transmission to the device over UART. */
 export interface UartCommand {

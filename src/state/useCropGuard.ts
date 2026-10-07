@@ -123,14 +123,25 @@ export function useCropGuard() {
         for (const s of update.scores) pending.scores.set(s.label, s.score);
       }
 
+      // Dynamic class handling: commit when we have a winner or a
+      // sufficient score set. With a retrained model the label count may
+      // differ from CLASS_ORDER, so we don't require a full match.
       const haveFullSet = CLASS_ORDER.every((l) => pending.scores.has(l));
+      const havePartialSet = pending.scores.size >= 3;
       const hasWinner = update.topLabel !== undefined;
-      if (!haveFullSet && !hasWinner) return;
+      if (!haveFullSet && !havePartialSet && !hasWinner) return;
 
       let scores: ClassScore[];
 
-      if (haveFullSet) {
-        scores = CLASS_ORDER.map((l) => ({ label: l, score: pending.scores.get(l) ?? 0 }));
+      if (haveFullSet || havePartialSet) {
+        // Build scores from everything the device reported.
+        const seen = [...pending.scores.entries()];
+        scores = seen.map(([label, score]) => ({ label, score }));
+        // Ensure all CLASS_ORDER labels are present even if the device
+        // only sent a subset.
+        for (const l of CLASS_ORDER) {
+          if (!scores.some((s) => s.label === l)) scores.push({ label: l, score: 0 });
+        }
       } else {
         const label = update.topLabel as string;
         // The winner may be a label outside the deployed set (after a retrain),
@@ -217,8 +228,13 @@ export function useCropGuard() {
     if (simMode === 'off') return;
     if (state === 'connected' || paused) return;
 
-    const truth: HiddenTruth | undefined =
-      simMode === 'healthy' ? 'Healthy' : simMode === 'late-blight' ? 'Late_Blight' : undefined;
+    const SIM_TRUTH_MAP: Partial<Record<typeof simMode, HiddenTruth>> = {
+      healthy: 'Healthy',
+      'late-blight': 'Late_Blight',
+      'target-spot': 'Tomato_Target_Spot',
+      'bacterial-spot': 'Tomato_Bacterial_Spot',
+    };
+    const truth: HiddenTruth | undefined = SIM_TRUTH_MAP[simMode];
 
     const id = window.setInterval(() => emitSimFrame(truth), SIM_INTERVAL_MS);
     return () => window.clearInterval(id);

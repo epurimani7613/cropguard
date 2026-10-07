@@ -1,13 +1,83 @@
-import { AlertTriangle, CheckCircle2, HelpCircle, Sprout, TriangleAlert } from 'lucide-react';
+import {
+  AlertTriangle,
+  Bug,
+  CheckCircle2,
+  HelpCircle,
+  Sprout,
+  TriangleAlert,
+  Zap,
+} from 'lucide-react';
 import { ConfidenceRing } from '@/components/confidence-ring';
 import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
 import { SEVERITY_LABEL } from '@/components/ui/stat';
-import { getCropClass } from '@/data/classes';
+import { getCropClass, inferCategory, normaliseLabel } from '@/data/classes';
 import { DEVICE_INFO } from '@/data/device';
 import { formatStamp } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { Inference } from '@/types/telemetry';
+import type { DiseaseCategory, Inference } from '@/types/telemetry';
+
+/* ------------------------------------------------------------------ */
+/* Dynamic colour mapping by disease category                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Colour scheme per disease category.
+ *   healthy   → Emerald Green  (#10B981)
+ *   fungal    → Crimson Red    (#EF4444)
+ *   bacterial → Violet         (#8B5CF6)
+ *   viral     → Amber          (#F59E0B)
+ */
+const CATEGORY_STYLE: Record<
+  DiseaseCategory,
+  {
+    /** CSS colour for the accent badge (inline style). */
+    bg: string;
+    text: string;
+    border: string;
+    /** Token-based TW class for the confidence ring. */
+    ringTone: 'ok' | 'warn' | 'danger' | 'muted';
+    icon: typeof CheckCircle2;
+    categoryLabel: string;
+  }
+> = {
+  healthy: {
+    bg: 'rgba(16,185,129,0.12)',
+    text: '#10B981',
+    border: 'rgba(16,185,129,0.35)',
+    ringTone: 'ok',
+    icon: CheckCircle2,
+    categoryLabel: 'Healthy',
+  },
+  fungal: {
+    bg: 'rgba(239,68,68,0.12)',
+    text: '#EF4444',
+    border: 'rgba(239,68,68,0.35)',
+    ringTone: 'danger',
+    icon: TriangleAlert,
+    categoryLabel: 'Fungal',
+  },
+  bacterial: {
+    bg: 'rgba(139,92,246,0.12)',
+    text: '#8B5CF6',
+    border: 'rgba(139,92,246,0.35)',
+    ringTone: 'warn',
+    icon: Bug,
+    categoryLabel: 'Bacterial',
+  },
+  viral: {
+    bg: 'rgba(245,158,11,0.12)',
+    text: '#F59E0B',
+    border: 'rgba(245,158,11,0.35)',
+    ringTone: 'warn',
+    icon: Zap,
+    categoryLabel: 'Viral',
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Sub-components                                                      */
+/* ------------------------------------------------------------------ */
 
 const SEVERITY_STYLE = {
   healthy: { chip: 'border-ok/30 bg-ok/10 text-ok', meter: 'ok' as const, icon: CheckCircle2 },
@@ -57,6 +127,32 @@ function List({ items, tone }: { items: string[]; tone: 'ok' | 'warn' | 'danger'
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Disease category badge (dynamic colour)                             */
+/* ------------------------------------------------------------------ */
+
+function CategoryBadge({ category }: { category: DiseaseCategory }) {
+  const cat = CATEGORY_STYLE[category];
+  const Icon = cat.icon;
+  return (
+    <span
+      className="pressable inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-2xs font-bold"
+      style={{
+        backgroundColor: cat.bg,
+        borderColor: cat.border,
+        color: cat.text,
+      }}
+    >
+      <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+      {cat.categoryLabel}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Main card                                                           */
+/* ------------------------------------------------------------------ */
+
 export function DiagnosisCard({ current }: { current: Inference | null }) {
   if (!current) {
     return (
@@ -77,11 +173,14 @@ export function DiagnosisCard({ current }: { current: Inference | null }) {
   const label = current.scores[current.topIndex]?.label ?? 'Healthy';
   const info = getCropClass(label);
   const passes = current.topScore >= DEVICE_INFO.threshold;
+  const category = inferCategory(label);
+  const catStyle = CATEGORY_STYLE[category];
+  const displayLabel = normaliseLabel(label);
 
   /**
    * Below threshold the model's top class is not a finding — it is the
-   * least-wrong option among three. Emitting "Action required" on a 58%
-   * reading would tell a grower to spray for late blight on evidence the
+   * least-wrong option. Emitting "Action required" on a 58%
+   * reading would tell a grower to spray on evidence the
    * firmware itself rejects, so a sub-threshold frame gets a neutral,
    * muted treatment and suppresses the agronomy panels entirely.
    */
@@ -111,26 +210,46 @@ export function DiagnosisCard({ current }: { current: Inference | null }) {
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5">
           <div className="min-w-0 flex-1">
             <span className="mono-label">Primary diagnosis</span>
-            <h3 className="mt-1.5 font-display text-[26px] font-extrabold uppercase leading-[1.1] tracking-tight text-ink">
-              {passes ? info.title : 'Inconclusive'}
+            <h3
+              className="mt-1.5 font-display text-[26px] font-extrabold uppercase leading-[1.1] tracking-tight"
+              style={{ color: passes ? catStyle.text : undefined }}
+            >
+              {passes ? displayLabel : 'Inconclusive'}
             </h3>
             <p className="mt-2.5 text-sm leading-relaxed text-muted">
               {passes
                 ? info.summary
-                : `Top class "${label}" scored ${(current.topScore * 100).toFixed(1)}%, under the ${DEVICE_INFO.threshold.toFixed(2)} decision threshold. No treatment guidance is emitted for a sub-threshold frame.`}
+                : `Top class "${displayLabel}" scored ${(current.topScore * 100).toFixed(1)}%, under the ${DEVICE_INFO.threshold.toFixed(2)} decision threshold. No treatment guidance is emitted for a sub-threshold frame.`}
             </p>
 
-            {/* Badge tags — the brief's "high-quality badge tags". */}
+            {/* Badge tags — dynamic colour by disease category. */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span
-                className={cn(
-                  'pressable inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-2xs font-bold',
-                  style.chip,
-                )}
-              >
-                <SeverityIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
-                {passes ? SEVERITY_LABEL[info.severity] : 'Below threshold'}
-              </span>
+              {passes ? (
+                <CategoryBadge category={category} />
+              ) : (
+                <span
+                  className={cn(
+                    'pressable inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-2xs font-bold',
+                    style.chip,
+                  )}
+                >
+                  <SeverityIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  Below threshold
+                </span>
+              )}
+
+              {passes && (
+                <span
+                  className={cn(
+                    'pressable inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-2xs font-bold',
+                    style.chip,
+                  )}
+                >
+                  <SeverityIcon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  {SEVERITY_LABEL[info.severity]}
+                </span>
+              )}
+
               <span className="pressable inline-flex items-center rounded-full border border-line/70 bg-elevated px-3 py-1 text-2xs font-semibold text-ink">
                 {info.crop}
               </span>
@@ -147,7 +266,7 @@ export function DiagnosisCard({ current }: { current: Inference | null }) {
 
           <ConfidenceRing
             value={current.topScore}
-            tone={style.meter}
+            tone={passes ? catStyle.ringTone : 'muted'}
             label="Confidence"
             caption={current.transport === 'json' ? 'JSON frame' : `${current.transport} parse`}
           />
@@ -161,6 +280,29 @@ export function DiagnosisCard({ current }: { current: Inference | null }) {
               <p className="mono-label mt-3">Immediate steps</p>
               <div className="mt-1.5">
                 <List items={info.actionPlan} tone={style.meter} />
+              </div>
+            </AccordionItem>
+
+            <AccordionItem value="remediation" title="Remediation & treatment plan">
+              <div className="space-y-3">
+                <div>
+                  <p className="mono-label">Disease type</p>
+                  <p className="mt-1 text-sm text-ink font-medium" style={{ color: catStyle.text }}>
+                    {catStyle.categoryLabel} {category !== 'healthy' ? 'pathogen' : ''} — {info.pathogen}
+                  </p>
+                </div>
+                <div>
+                  <p className="mono-label">Immediate treatment</p>
+                  <div className="mt-1.5">
+                    <List items={info.chemicalControls} tone="warn" />
+                  </div>
+                </div>
+                <div>
+                  <p className="mono-label">Prevention</p>
+                  <div className="mt-1.5">
+                    <List items={info.organicControls} tone="ok" />
+                  </div>
+                </div>
               </div>
             </AccordionItem>
 
