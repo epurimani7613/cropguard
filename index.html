@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <meta
+      name="description"
+      content="CropGuard TinyML — edge-AI crop health and disease diagnostics for STM32F411 with Edge Impulse inference."
+    />
+    <meta property="og:title" content="CropGuard TinyML — Edge Health Diagnostics" />
+    <meta
+      property="og:description"
+      content="On-device TinyML crop disease classification for STM32F411, with live Web Serial telemetry."
+    />
+    <meta property="og:type" content="website" />
+    <title>CropGuard TinyML — Edge Health Diagnostics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Apply stored theme before first paint to avoid a flash.
+      (function () {
+        try {
+          var stored = localStorage.getItem('cropguard.theme');
+          var theme =
+            stored ||
+            (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+        } catch (e) {
+          /* private mode / blocked storage - dark default is already on <html> */
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-BN865kSR.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-UeUqTPbs.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
