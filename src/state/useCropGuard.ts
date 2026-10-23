@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { initAudio } from '@/lib/audio';
 import type {
   ClassScore,
   ConnectionState,
@@ -54,7 +55,7 @@ function describeError(err: unknown): string {
   return 'unknown error';
 }
 
-export function useCropGuard() {
+export function useCropGuard(options?: { onRawLine?: (raw: string) => void }) {
   const [logs, setLogs] = useState<LogLine[]>(() => [
     makeLog('SYS', `Edge Impulse runtime: ${DEVICE_INFO.runtime}`),
     makeLog('SYS', `Labels: ${CLASS_ORDER.join(', ')} (threshold ${DEVICE_INFO.threshold})`),
@@ -82,6 +83,9 @@ export function useCropGuard() {
   const truthRef = useRef<HiddenTruth>('Healthy');
   const portRef = useRef<SerialPort | null>(null);
   const splitterRef = useRef(new LineSplitter());
+  /** Stable ref to the onRawLine callback so readSerialLines closure doesn't need it as a dep. */
+  const onRawLineRef = useRef(options?.onRawLine);
+  onRawLineRef.current = options?.onRawLine;
   /** Scores accumulate across lines and commit when a frame completes. */
   const pendingRef = useRef<{ scores: Map<string, number>; dspMs?: number; nnMs?: number }>({
     scores: new Map(),
@@ -178,6 +182,10 @@ export function useCropGuard() {
       const parsed = parseSerialLine(raw);
       pushLogs([makeLog(parsed.level, parsed.message)]);
 
+      // Forward every raw line to the DATA stream parser (Feature 4 & 5).
+      // Only DATA lines are actually consumed by it; everything else is ignored.
+      onRawLineRef.current?.(raw);
+
       const update = extractUpdate(raw);
       if (update) commitFrame(update);
     },
@@ -244,6 +252,9 @@ export function useCropGuard() {
   /* Web Serial                                                        */
   /* ---------------------------------------------------------------- */
   const connect = useCallback(async () => {
+    // Initialise Web Audio on the first user gesture so sound alerts work.
+    initAudio();
+
     const serial = navigator.serial;
     if (!serial) {
       pushLogs([makeLog('ERROR', 'Web Serial unavailable — use Chrome or Edge over https/localhost.')]);

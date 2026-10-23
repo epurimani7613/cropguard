@@ -18,9 +18,18 @@ import { formatBytes } from '@/lib/format';
 import { useCropGuard, UART_COMMANDS } from '@/state/useCropGuard';
 import { useDiseaseDetection } from '@/state/useDiseaseDetection';
 import { readStoredTheme, storeTheme, type ThemeMode } from '@/lib/theme';
+import { AlertPanel } from '@/components/alert-panel';
+import { HistoryCharts } from '@/components/history-charts';
+import { DataSimulatePanel } from '@/components/data-simulate-panel';
+import { useDataStream } from '@/state/useDataStream';
+import { initAudio } from '@/lib/audio';
 
 export default function App() {
-  const cg = useCropGuard();
+  // ── Feature 4 & 5 state ─────────────────────────────────────────────────
+  const dataStream = useDataStream();
+
+  // ── Existing state ────────────────────────────────────────────────────────
+  const cg = useCropGuard({ onRawLine: dataStream.handleRawLine });
   const dd = useDiseaseDetection(cg.state);
   const [theme, setTheme] = useState<ThemeMode>(
     () => readStoredTheme() ?? (document.documentElement.classList.contains('dark') ? 'dark' : 'light'),
@@ -41,11 +50,16 @@ export default function App() {
     dd.setDemoMode(cg.state !== 'connected');
   }, [cg.state, dd.setDemoMode]);
 
+  // Initialise Web Audio on any user gesture on the page
+  const handlePageClick = useCallback(() => {
+    initAudio();
+  }, []);
+
   const { derived, telemetry, state, actions } = cg;
   const serialBlocked = state === 'connected' || state === 'connecting';
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" onClick={handlePageClick}>
       <Header
         state={state}
         theme={theme}
@@ -72,7 +86,8 @@ export default function App() {
                   <span className="text-ink">Simulator mode.</span> Telemetry and verdicts are generated
                   locally and are plausible field values, not measurements. Use{' '}
                   <span className="font-mono text-ink">Connect via Web Serial</span> in the console below to
-                  attach a real board.
+                  attach a real board. Use <span className="font-mono text-ink">Simulate DATA Lines</span> below
+                  to test Feature 4 &amp; 5 without hardware.
                 </>
               )}
             </p>
@@ -149,6 +164,32 @@ export default function App() {
             <DiseaseDetectionHistory
               history={dd.history}
               isDemoMode={dd.isDemoMode}
+            />
+          </div>
+
+          {/* ── Feature 4: Alert Status Panel ── */}
+          <div className="xl:col-span-7">
+            <AlertPanel
+              latest={dataStream.latest}
+              alertLevel={dataStream.alertLevel}
+              alertReasonText={dataStream.alertReason}
+              bannerVisible={dataStream.bannerVisible}
+              onDismissBanner={dataStream.dismissBanner}
+              alertLog={dataStream.alertLog}
+            />
+          </div>
+
+          {/* Feature 4: Simulate DATA lines (test mode) */}
+          <div className="xl:col-span-5">
+            <DataSimulatePanel onSimulateLine={dataStream.simulateLine} />
+          </div>
+
+          {/* ── Feature 5: History Charts ── */}
+          <div className="xl:col-span-12">
+            <HistoryCharts
+              rows={dataStream.rows}
+              onClearHistory={dataStream.clearHistory}
+              onExportCsv={dataStream.exportCsv}
             />
           </div>
 
