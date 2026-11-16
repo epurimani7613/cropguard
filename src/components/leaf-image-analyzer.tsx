@@ -46,8 +46,8 @@ export interface LeafImageAnalyzerProps {
 
 export function LeafImageAnalyzer({ onScanCompleted, className }: LeafImageAnalyzerProps) {
   // Current active image source (data URL or object URL)
-  const [imageSrc, setImageSrc] = useState<string | null>(SAMPLE_LEAVES[1].dataUrl);
-  const [imageFileName, setImageFileName] = useState<string>('sample-early-blight-leaf.svg');
+  const [imageSrc, setImageSrc] = useState<string | null>(SAMPLE_LEAVES[0].dataUrl);
+  const [imageFileName, setImageFileName] = useState<string>('healthy-leaf-sample.svg');
   const [imageFileSize, setImageFileSize] = useState<string>('Sample Leaf');
   const [isSample, setIsSample] = useState<boolean>(true);
 
@@ -60,7 +60,7 @@ export function LeafImageAnalyzer({ onScanCompleted, className }: LeafImageAnaly
   const [scanStep, setScanStep] = useState<string>('Ready for analysis');
   const [analysisResult, setAnalysisResult] = useState<LeafAnalysisResult | null>(null);
   const [treatmentPlan, setTreatmentPlan] = useState<TreatmentRecommendation>(
-    AGRONOMIC_KNOWLEDGE_BASE['Early Blight'],
+    AGRONOMIC_KNOWLEDGE_BASE['Healthy'],
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastLoggedAt, setLastLoggedAt] = useState<Date | null>(null);
@@ -70,7 +70,7 @@ export function LeafImageAnalyzer({ onScanCompleted, className }: LeafImageAnaly
     let active = true;
     const runInitial = async () => {
       try {
-        const result = await classifyLeafImage(SAMPLE_LEAVES[1].dataUrl);
+        const result = await classifyLeafImage(SAMPLE_LEAVES[0].dataUrl);
         if (!active) return;
         setAnalysisResult(result);
         const plan = getTreatmentRecommendation(result.category);
@@ -93,6 +93,7 @@ export function LeafImageAnalyzer({ onScanCompleted, className }: LeafImageAnaly
       return;
     }
     setErrorMsg(null);
+    setAnalysisResult(null); // Reset previous result immediately
     setIsSample(false);
     setImageFileName(file.name);
     setImageFileSize(`${(file.size / 1024).toFixed(1)} KB`);
@@ -189,6 +190,7 @@ export function LeafImageAnalyzer({ onScanCompleted, className }: LeafImageAnaly
   // Select a preset sample leaf
   const selectSample = useCallback(
     (sample: SampleLeaf) => {
+      setAnalysisResult(null);
       setImageSrc(sample.dataUrl);
       setImageFileName(`${sample.name.toLowerCase().replace(/\s+/g, '-')}-sample.svg`);
       setImageFileSize('Sample Leaf');
