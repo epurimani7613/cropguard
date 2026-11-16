@@ -71,8 +71,8 @@ export interface DiseaseDetection {
   deviceId: string;
   /** Severity label from hardware, or null if not provided. */
   severity: string | null;
-  /** Whether this detection is real hardware data or demo/simulation data. */
-  source: 'hardware' | 'demo';
+  /** Whether this detection is real hardware data, demo/simulation data, or software uploaded image scan. */
+  source: 'hardware' | 'demo' | 'software';
 }
 
 /* ------------------------------------------------------------------ */

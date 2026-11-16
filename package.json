@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "tsx scripts/test-parser.ts",
+    "test": "tsx scripts/test-parser.ts && tsx scripts/test-knowledge-base.ts",
     "preview": "vite preview --port 4173",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"

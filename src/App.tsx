@@ -23,6 +23,10 @@ import { HistoryCharts } from '@/components/history-charts';
 import { DataSimulatePanel } from '@/components/data-simulate-panel';
 import { useDataStream } from '@/state/useDataStream';
 import { initAudio } from '@/lib/audio';
+import { LeafImageAnalyzer } from '@/components/leaf-image-analyzer';
+import type { LeafAnalysisResult } from '@/lib/image-classifier';
+import type { DiseaseDetection } from '@/types/disease-detection';
+import type { Inference } from '@/types/telemetry';
 
 export default function App() {
   // ── Feature 4 & 5 state ─────────────────────────────────────────────────
@@ -57,6 +61,97 @@ export default function App() {
 
   const { derived, telemetry, state, actions } = cg;
   const serialBlocked = state === 'connected' || state === 'connecting';
+
+  // ── Software Leaf Image Scan Handler ────────────────────────────────────
+  const handleScanCompleted = useCallback(
+    (
+      result: LeafAnalysisResult,
+      meta: { fileName: string; fileSize?: string; isSample?: boolean },
+    ) => {
+      // 1. Log to Disease Detection state (updates DiseaseDetectionCard, EdgeDeviceStatus, History table)
+      const mappedLabel =
+        result.category === 'Healthy'
+          ? 'Healthy'
+          : result.category === 'Early Blight'
+            ? 'Early Blight'
+            : 'Late Blight';
+
+      const detection: DiseaseDetection = {
+        id: `upload-${Date.now()}`,
+        crop: 'Tomato',
+        disease: mappedLabel,
+        confidence: result.confidence,
+        timestamp: new Date(),
+        model: 'Browser Vision AI / MobileNet',
+        modelVersion: 'v2.4-web',
+        deviceId: 'IMAGE-SCANNER',
+        severity:
+          result.category === 'Healthy'
+            ? 'healthy'
+            : result.category === 'Early Blight'
+              ? 'watch'
+              : 'critical',
+        source: 'software',
+      };
+      dd.pushDetection(detection);
+
+      // 2. Forward to CropGuard runtime (updates top DiagnosisCard, ScoreBreakdown & Throughput)
+      const eiLabel =
+        result.category === 'Healthy'
+          ? 'Healthy'
+          : result.category === 'Early Blight'
+            ? 'Early_Blight'
+            : 'Late_Blight';
+
+      const remainingScore = (1 - result.confidence) / (CLASS_ORDER.length - 1);
+      const scores = CLASS_ORDER.map((l) => ({
+        label: l,
+        score: l === eiLabel ? result.confidence : remainingScore,
+      }));
+
+      const topIdx = CLASS_ORDER.indexOf(eiLabel as (typeof CLASS_ORDER)[number]);
+      const inf: Inference = {
+        id: `inf-upload-${Date.now()}`,
+        timestamp: new Date(),
+        scores,
+        topIndex: topIdx >= 0 ? topIdx : 0,
+        topScore: result.confidence,
+        timing: {
+          dspMs: Math.max(3, Math.round(result.inferenceMs * 0.2)),
+          nnMs: Math.max(9, Math.round(result.inferenceMs * 0.8)),
+          frameMs: result.inferenceMs,
+        },
+        source: 'simulated',
+        transport: 'log',
+      };
+      actions.injectInference(inf);
+
+      // 3. Emit DATA telemetry line to dataStream (updates History Charts & Alert Engine)
+      const shortDisease =
+        result.category === 'Healthy'
+          ? 'healthy'
+          : result.category === 'Early Blight'
+            ? 'early'
+            : 'late';
+
+      const env =
+        result.category === 'Healthy'
+          ? { temp: 24.2, hum: 62.0, wet: 24 }
+          : result.category === 'Early Blight'
+            ? { temp: 27.5, hum: 81.5, wet: 54 }
+            : { temp: 19.2, hum: 92.4, wet: 66 };
+
+      const dataLine = `DATA,${Date.now() % 100000},${env.temp},${env.hum},${env.wet},${shortDisease},${Math.round(result.confidence * 100)},confirmed,0,0,enough`;
+      dataStream.simulateLine(dataLine);
+
+      // 4. Push log to UART/console panel
+      actions.pushLog(
+        'PREDICTION',
+        `[VISION AI] Image "${meta.fileName}" classified as ${result.category} (${(result.confidence * 100).toFixed(1)}% conf) in ${result.inferenceMs}ms`,
+      );
+    },
+    [actions, dataStream, dd],
+  );
 
   return (
     <div className="min-h-screen" onClick={handlePageClick}>
@@ -135,6 +230,11 @@ export default function App() {
               />
               <DeviceSpec />
             </div>
+          </div>
+
+          {/* ── Leaf Disease Image Analyzer & Treatment Advisor Module ── */}
+          <div className="xl:col-span-12">
+            <LeafImageAnalyzer onScanCompleted={handleScanCompleted} />
           </div>
 
           {/* ── Edge AI Disease Detection ── */}

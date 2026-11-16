@@ -500,6 +500,13 @@ export function useCropGuard(options?: { onRawLine?: (raw: string) => void }) {
         setLastRun(null);
       },
       runPreset,
+      injectInference: (inf: Inference) => {
+        pushInference(inf);
+        setLastRun(inf);
+      },
+      pushLog: (level: LogLevel, message: string) => {
+        pushLogs([makeLog(level, message)]);
+      },
       clearLogs,
       exportLogs,
     },

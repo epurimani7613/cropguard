@@ -71,6 +71,11 @@ export default {
           '0%,100%': { opacity: '1' },
           '50%': { opacity: '0.75' },
         },
+        'scan-line': {
+          '0%': { top: '0%' },
+          '50%': { top: '96%' },
+          '100%': { top: '0%' },
+        },
       },
       animation: {
         'pulse-ring': 'pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -78,6 +83,7 @@ export default {
         rise: 'rise 300ms cubic-bezier(0.16, 1, 0.3, 1) both',
         sway: 'sway 5s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        'scan-line': 'scan-line 2s ease-in-out infinite',
       },
     },
   },

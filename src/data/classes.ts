@@ -29,18 +29,18 @@ export const CROP_CLASSES: Record<string, CropClass> = {
     overview:
       'The capture shows uniform pigmentation across the lamina with continuous interveinal tissue and no marginal necrosis. Lesion-area analysis is below the alerting threshold, and the decision boundary has been stable across the last 200 inferences — which indicates good capture conditions rather than the model guessing. No fungicide intervention is warranted; the correct action here is to keep monitoring on the existing schedule.',
     actionPlan: [
+      'Maintain regular drip irrigation at the root zone and avoid wetting foliage late in the evening.',
+      'Apply balanced NPK 19-19-19 water-soluble fertilizer or organic vermicompost (500g per plant) every 15 days to maintain steady vegetative growth.',
       'Hold the current irrigation schedule — no corrective action required.',
-      'Re-baseline with ~200 frames from this canopy block at the next scheduled capture.',
-      'Keep the sensor head at 0.4 m standoff; drift beyond 0.5 m degrades crop-size accuracy.',
       'Log this reading against the field notebook so treatment history stays auditable.',
     ],
     organicControls: [
-      'Maintain a 3-species companion planting ratio to suppress aphid vectors.',
-      'Top-dress with compost at 200 g/m² to hold soil moisture variance under 12%.',
-      'Rotate to a non-solanaceous cover crop between cycles.',
+      'Apply preventive Neem Oil (Azadirachtin 1500 ppm) foliar spray (3 ml/liter of water) every 10–14 days to deter pests.',
+      'Top-dress with organic vermicompost (500g per plant) every 15 days.',
+      'Maintain companion planting to suppress aphid and whitefly vectors.',
     ],
     chemicalControls: [
-      'No foliar application required. Avoid prophylactic spraying — it selects for resistance.',
+      'No chemical pesticide required. Apply a preventive Neem Oil (Azadirachtin 1500 ppm) foliar spray (3 ml/liter of water) every 10–14 days to deter pests.',
     ],
     alerts: ['No active alerts. Escalate if humidity stays above 85% for 6+ hours.'],
   },
@@ -60,21 +60,20 @@ export const CROP_CLASSES: Record<string, CropClass> = {
     overview:
       'Dark brown lesions showing concentric zonation and a surrounding chlorotic halo, worst on the oldest foliage, match Alternaria solani at low-to-moderate severity. The pathogen is soil-borne and splash-dispersed, so it always advances from the canopy floor upward. Spore pressure climbs sharply once relative humidity stays above 80%.',
     actionPlan: [
-      'Remove and destroy the most affected lower leaves today — do not compost on site.',
-      'Raise airflow: reduce canopy density by ~20% and support stems upright within 48 h.',
-      'Switch to drip irrigation for 72 h; keep the leaf surface dry overnight.',
-      'Re-scan this zone in 5–7 days; escalate to the critical protocol if lesion area passes 5%.',
+      'Prune and destroy infected lower yellow/brown leaves with concentric rings immediately and improve air circulation between plants.',
+      'Switch to a Potassium- and Calcium-rich fertilizer (NPK 12-12-17 or Potassium Nitrate + Calcium Nitrate) to strengthen leaf cell walls.',
+      'Avoid high-nitrogen fertilizers — excess nitrogen promotes soft, susceptible foliage.',
+      'Raise airflow: reduce canopy density and support stems upright.',
+      'Switch to drip irrigation; keep the leaf surface dry overnight.',
     ],
     organicControls: [
-      'Apply a copper-based bactericide/fungicide at 2 g/L as a protectant, repeat every 10 days.',
+      'For organic control, apply Bacillus subtilis bio-fungicide or copper-based protectant at 7–10 day intervals.',
       'Spray 1% neem emulsion with a wetting agent to disrupt spore germination.',
-      'Apply Trichoderma harzianum soil drench at 5 L/ha to outcompete soil inoculum.',
-      'Mulch with clean straw to stop soil splash reaching the lower canopy.',
+      'Mulch with clean straw or plastic to prevent splash dispersal of soil-borne spores.',
     ],
     chemicalControls: [
-      'Mancozeb 75% WP at 2 g/L — the standard protectant for early blight.',
-      'Azoxystrobin 23% SC at 1 ml/L where local residue limits permit; rotate FRAC groups.',
-      'Always confirm the product is registered for early blight on potato in your region.',
+      'Apply Mancozeb 75% WP (2.5 g/liter of water) or Chlorothalonil / Azoxystrobin fungicide at 7–10 day intervals.',
+      'Rotate chemical groups (FRAC 44 / M03) to prevent resistance development.',
     ],
     alerts: [
       'Wetness > 70% for more than 4 h → outbreak likely, notify the agronomist.',
@@ -94,21 +93,20 @@ export const CROP_CLASSES: Record<string, CropClass> = {
     overview:
       'Water-soaked lesions spreading inward from the leaf margin, with a pale advance zone ahead of the necrotic tissue and visible sporulation on the abaxial surface, confirm Phytophthora infestans. This oomycete completes a full infection cycle in under 48 h and is vectored across the block by wind-driven rain. This is a reportable, economically severe finding.',
     actionPlan: [
-      'STOP — isolate this zone within 2 h and mark it; do not walk the block.',
-      'Harvest clean tubers from unaffected rows first; never move plants from this zone inward.',
+      'Quarantine affected plants, remove water-soaked dark lesions immediately, and reduce overhead humidity/watering.',
+      'Apply Mono Potassium Phosphate (NPK 0-52-34) foliar feed to boost plant immunity and stress tolerance.',
+      'Strictly stop all nitrogen-based fertilizers immediately.',
+      'STOP — isolate this zone immediately and mark it; do not walk between rows.',
       'Strip and destroy all symptomatic foliage within 24 h — bag it, do not compost.',
-      'Notify the grower and regional extension service; late blight is a notifiable outbreak.',
-      'Start a 3-day spray interval protectant program; no more than 2 consecutive curative sprays.',
     ],
     organicControls: [
-      'Copper oxychloride 50% WP at 2.5 g/L tank-mixed with mancozeb 75% WP at 2.5 g/L.',
+      'Copper oxychloride 50% WP at 2.5 g/L tank-mixed with protective bio-barrier film.',
       'Support with Bacillus subtilis foliar sprays at 5 ml/L every 5 days as a biological barrier.',
       'Trench and solarise infected beds to kill overwintering soil inoculum before the next season.',
     ],
     chemicalControls: [
-      'Cymoxanil 8% + mancozeb 64% WP at 2 g/L — the standard protectant mix.',
-      'Curative rotation: dimethomorph 50% WP at 0.75 g/L, then metalaxyl-M + mancozeb at 2 g/L.',
-      'Respect PHI and MRLs; confirm registration for your crop and region before application.',
+      'Immediately spray a systemic + contact fungicide such as Metalaxyl-M 8% + Mancozeb 64% WP (2.5 g/liter of water) or Cymoxanil + Mancozeb every 5–7 days until spread stops.',
+      'Alternate FRAC group 4 and M03 to safeguard systemic molecule efficacy.',
     ],
     alerts: [
       'Spore count and wetness both rising → outbreak trajectory confirmed.',

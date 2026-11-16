@@ -372,6 +372,21 @@ export function DiseaseDetectionCard({
               </>
             )}
 
+            {latest.source === 'software' && (
+              <>
+                <div className="hairline" />
+                <div className="flex items-start gap-2 rounded-lg border border-brand/30 bg-brand/5 px-2.5 py-2">
+                  <Shield
+                    className="mt-[1px] h-3.5 w-3.5 shrink-0 text-brand"
+                    strokeWidth={1.75}
+                  />
+                  <p className="text-2xs leading-relaxed text-muted">
+                    <span className="font-semibold text-brand">SOFTWARE IMAGE SCAN</span> — This result was analyzed from an uploaded leaf image via in-browser computer vision inference.
+                  </p>
+                </div>
+              </>
+            )}
+
             {latest.source === 'demo' && (
               <>
                 <div className="hairline" />
